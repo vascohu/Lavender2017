@@ -2,7 +2,7 @@ import numpy as np
 import scipy.stats as st
 import math as math
 
-#np.random.seed(1234)
+np.random.seed(1230)
 
 
 # Generate the synthetic data : s\in {0,1,2}
@@ -20,7 +20,7 @@ def syn_label_gene(task_num, worker_num, label_num):
         else:
             __label_mat[task_no][worker_no] = 3 - __true_labels[task_no]
 
-    return __true_labels.astype(int), __label_mat.astype(int)
+    return __true_labels.astype(int), __label_mat.astype(int), worker_quality
 
 
 # Majority Voting to filter the true labels
@@ -79,13 +79,13 @@ def em_filter(__label_mat, __label_num=2):
             for j in range(__worker_num):
                 __ob_label_ij = __label_mat[i, j]
                 if __ob_label_ij > 0:
-                    __prob_inc_vec = np.log(__label_tensor[j, :, __ob_label_ij-1])
+                    __prob_inc_vec = np.log(__label_tensor[j, :, __ob_label_ij-1]+1e-20)
                     __label_dist[i, :] += __prob_inc_vec
         __task_label_prob = np.exp(__label_dist)
         for i in range(__task_num):
             __task_label_prob[i, :] /= np.sum(__task_label_prob[i, :])
         '''M step: update the estimate of the tensor'''
-        __label_tensor0 = __label_tensor
+        __label_tensor0 = __label_tensor.copy()
         __label_tensor.fill(0)
         for i in range(__task_num):
             for j in range(__worker_num):
@@ -107,7 +107,7 @@ def em_filter(__label_mat, __label_num=2):
     for i in range(__task_num):
         for j in range(__worker_num):
             __ob_label_ij = __label_mat[i, j]
-            __prob_inc_vec = np.log(__label_tensor[j, :, __ob_label_ij - 1])
+            __prob_inc_vec = np.log(__label_tensor[j, :, __ob_label_ij - 1]+1e-20)
             __label_dist[i, :] += __prob_inc_vec
     __task_label_prob = np.exp(__label_dist)
     for i in range(__task_num):
@@ -115,16 +115,49 @@ def em_filter(__label_mat, __label_num=2):
     return __label_tensor, __task_label_prob
 
 
+def prob_to_label(task_label_prob):
+    __task_num = task_label_prob.shape[0]
+    __labels = np.zeros(__task_num)
+    for i in range(__task_num):
+        __labels[i] = np.argmax(task_label_prob[i, :]) + 1
+    return __labels
+
+
+def label_accuracy(__label1, __label2):
+    __task_num = __label1.shape[0]
+    __same_label_num = 0
+    for i in range(__task_num):
+        if __label1[i] == __label2[i]:
+            __same_label_num += 1
+    return __same_label_num/__task_num
+
 if __name__ == "__main__":
-    (true_labels, label_mat) = syn_label_gene(10, 10, 100)
-    # print(true_labels)
-    # print(label_mat)
-    # online_labels = np.zeros(label_mat.shape, dtype=int)
-    # online_labels[0: 2, 0: 5] = label_mat[0: 2, 0: 5]
-    task_label_prob = maj_voting(label_mat)
-    (label_tensor, task_label_prob_em) = em_filter(label_mat)
+    worker_num = 10
+    task_num = 90
+    acc_data = []
+    fp = open('result.txt', 'w')
+    for i in range(10):
+        (true_labels, label_mat, worker_qua) = syn_label_gene(task_num, worker_num, task_num * worker_num)
+        task_label_prob_mj = maj_voting(label_mat)
+        label_mj = prob_to_label(task_label_prob_mj)
+        accuracy_mj = label_accuracy(true_labels, label_mj)
+        print("MJ Accuracy: ", accuracy_mj)
+        (label_tensor, task_label_prob_em) = em_filter(label_mat)
+        label_em = prob_to_label(task_label_prob_em)
+        accuracy_em = label_accuracy(true_labels, label_em)
+        print("EM Accuracy: ", accuracy_em)
+        acc_data.append([accuracy_mj, accuracy_em])
+        # formulated = "%.5f" % accuracy_em
+        fp.write("{:.5f}".format(accuracy_mj)+'\t'+"{:.5f}".format(accuracy_em)+'\n')
+    print(acc_data)
+    fp.close()
     # print(online_labels)
     # print(task_label_prob)
     # print(task_label_prob_em)
+
+    '''
     for i in range(10):
         print(true_labels[i], '\t', task_label_prob[i, :], '\t', task_label_prob_em[i, :])
+    for i in range(10):
+        print(worker_qua[i], '\n', label_tensor[i, :, :])
+    '''
