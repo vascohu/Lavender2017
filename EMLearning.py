@@ -133,10 +133,10 @@ def label_accuracy(__label1, __label2):
 
 if __name__ == "__main__":
     worker_num = 10
-    task_num = 90
+    task_num = 100
     acc_data = []
     fp = open('result.txt', 'w')
-    for i in range(10):
+    for i in range(1):
         (true_labels, label_mat, worker_qua) = syn_label_gene(task_num, worker_num, task_num * worker_num)
         task_label_prob_mj = maj_voting(label_mat)
         label_mj = prob_to_label(task_label_prob_mj)
@@ -149,15 +149,16 @@ if __name__ == "__main__":
         acc_data.append([accuracy_mj, accuracy_em])
         # formulated = "%.5f" % accuracy_em
         fp.write("{:.5f}".format(accuracy_mj)+'\t'+"{:.5f}".format(accuracy_em)+'\n')
-    print(acc_data)
-    fp.close()
+        for j in range(10):
+            print(true_labels[j], '\t', task_label_prob_mj[j, :], '\t', task_label_prob_em[j, :])
+        for j in range(10):
+            print(worker_qua[j], '\n', label_tensor[j, :, :])
+
+    # print(acc_data)
+    # fp.close()
     # print(online_labels)
     # print(task_label_prob)
     # print(task_label_prob_em)
 
-    '''
-    for i in range(10):
-        print(true_labels[i], '\t', task_label_prob[i, :], '\t', task_label_prob_em[i, :])
-    for i in range(10):
-        print(worker_qua[i], '\n', label_tensor[i, :, :])
-    '''
+
+
