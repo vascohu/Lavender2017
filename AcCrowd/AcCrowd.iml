@@ -7,5 +7,7 @@
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="jsc" level="project" />
+    <orderEntry type="library" name="commons.math" level="project" />
   </component>
 </module>
