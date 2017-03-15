@@ -7,7 +7,7 @@ import org.apache.commons.math3.linear.BlockRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 
 public class Market_Simulator {
-    private int m_task_num, m_worker_num;
+    private int m_task_num, m_worker_num, m_class_num;
     private Task[] m_task_array;
     private Worker[] m_worker_array;
     private RealMatrix m_label_mat;
@@ -17,9 +17,20 @@ public class Market_Simulator {
     {
         m_task_num = task_num;
         m_worker_num = worker_num;
+        m_class_num = 2;
         Generate_Market();
         Get_Ground_Truth();
     }
+
+    public Market_Simulator(int task_num, int worker_num, int class_num)
+    {
+        m_task_num = task_num;
+        m_worker_num = worker_num;
+        m_class_num = class_num;
+        Generate_Market();
+        Get_Ground_Truth();
+    }
+
 
     // Get the online label from the label mat
     public double getLabelStream(int task_no, int worker_no)
@@ -35,6 +46,11 @@ public class Market_Simulator {
     public int getWorker_Num()
     {
         return m_worker_num;
+    }
+
+    public int getClass_Num()
+    {
+        return m_class_num;
     }
 
     public RealMatrix getTrue_label_mat()
