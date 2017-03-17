@@ -6,6 +6,7 @@ import jsc.distributions.*;
 import org.apache.commons.math3.linear.BlockRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 
+
 public class Market_Simulator {
     private int m_task_num, m_worker_num, m_class_num;
     private Task[] m_task_array;
@@ -134,9 +135,10 @@ class SingleCoin_Worker implements Worker {
     SingleCoin_Worker()
     {
         double ub_reliability = 1.0;
-        double lb_reliability = 0.5;
+        double lb_reliability = 0.4;
         Uniform random_ob = new Uniform(lb_reliability, ub_reliability);
         m_reliability = random_ob.random();
+        //m_reliability = 0.8;
     }
 
     public int labelTask(Task t)
