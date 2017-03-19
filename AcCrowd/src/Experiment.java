@@ -1,9 +1,6 @@
 import org.apache.commons.math3.linear.RealMatrix;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /* Generate the experiment instance.
  * Created by Zehong on 3/14/2017 0014.
@@ -19,9 +16,10 @@ public class Experiment {
 //        result.print();
 //    }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         int nThreads = 10;
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(nThreads, nThreads,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+        WorkerThreadFactory2 WT = new WorkerThreadFactory2();
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(nThreads, nThreads,0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(),WT);
 
         for(int i=0;i<30;i++){
             MyTask myTask = new MyTask(i);
@@ -29,7 +27,10 @@ public class Experiment {
             System.out.println("线程池中线程数目："+executor.getPoolSize()+"，队列中等待执行的任务数目："+
                     executor.getQueue().size()+"，已执行玩别的任务数目："+executor.getCompletedTaskCount());
         }
+        System.out.println(">>>>>>>>><<<<<<<<<<<<<");
         executor.shutdown();
+        boolean finshed = executor.awaitTermination(Integer.MAX_VALUE, TimeUnit.MINUTES);
+        System.out.println("SSSSSSSSSSSSSSSSSSSSSSSS");
     }
 }
 
@@ -48,7 +49,15 @@ class MyTask implements Runnable {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println("task "+taskNum+"执行完毕");
+        System.out.println("task "+taskNum+"执行完毕"+" at Thread "+ Thread.currentThread().getName());
+    }
+}
+
+class WorkerThreadFactory2 implements ThreadFactory {
+    private int counter = 0;
+
+    public Thread newThread(Runnable r) {
+        return new Thread(r, Integer.toString(counter++));
     }
 }
 

@@ -58,7 +58,7 @@ public class Active_Mechanism {
 
     public double getFinalObjValue()
     {
-        return m_obj.getObjValue(m_PModel, m_simulator);
+        return m_obj.getObjValue(m_PModel);
     }
 
     public State getFinalLabelMat()
@@ -91,6 +91,7 @@ class State extends BlockRealMatrix {
     {
         return (State)super.copy();
     }
+
 }
 
 /* Give an alias to the task-worker decision (i---task no, j---worker no).
@@ -107,7 +108,7 @@ class Action {
 /* The Objective Function calculates the desired accuracy metric.
  */
 interface Obj_Function {
-    double getObjValue(Prob_Model model, Market_Simulator simulator);
+    double getObjValue(Prob_Model model);
 }
 
 
@@ -124,6 +125,10 @@ interface Prob_Model{
     void QuickUpdate(Action a, State newS);
     // Deep copy a new probability model
     Prob_Model Copy();
+    // Get Task Num
+    int getTask_Num();
+    // Get Class Num
+    int getClass_num();
 }
 
 
@@ -131,8 +136,8 @@ interface Prob_Model{
  */
 class Confidence_Obj implements Obj_Function {
     @Override
-    public double getObjValue(Prob_Model model, Market_Simulator simulator) {
-        int task_num = simulator.getTask_Num();
+    public double getObjValue(Prob_Model model) {
+        int task_num = model.getTask_Num();
         double confidence = 0;
         for(int i=0; i<task_num; ++i)
         {
@@ -147,8 +152,8 @@ class Confidence_Obj implements Obj_Function {
  */
 class Margin_Obj implements Obj_Function {
     @Override
-    public double getObjValue(Prob_Model model, Market_Simulator simulator) {
-        int task_num = simulator.getTask_Num();
+    public double getObjValue(Prob_Model model) {
+        int task_num = model.getTask_Num();
         double margin = 0;
         for(int i=0; i<task_num; ++i)
         {
@@ -168,8 +173,8 @@ class Margin_Obj implements Obj_Function {
  */
 class Entropy_Obj implements Obj_Function {
     @Override
-    public double getObjValue(Prob_Model model, Market_Simulator simulator) {
-        int task_num = simulator.getTask_Num();
+    public double getObjValue(Prob_Model model) {
+        int task_num = model.getTask_Num();
         double entropy = 0;
         for(int i=0; i<task_num; ++i)
         {
@@ -194,7 +199,7 @@ class MJ_Model implements Prob_Model {
 
     private MJ_Model() {}
 
-    private void Set_Mode(RealMatrix label_count, RealMatrix label_prob)
+    private void Set_Model(RealMatrix label_count, RealMatrix label_prob)
     {
         m_label_count = label_count;
         m_label_prob = label_prob;
@@ -256,8 +261,18 @@ class MJ_Model implements Prob_Model {
         MJ_Model new_Model = new MJ_Model();
         RealMatrix new_label_count = m_label_count.copy();
         RealMatrix new_label_prob = m_label_prob.copy();
-        new_Model.Set_Mode(new_label_count, new_label_prob);
+        new_Model.Set_Model(new_label_count, new_label_prob);
         return new_Model;
+    }
+
+    public int getTask_Num()
+    {
+        return m_label_count.getRowDimension();
+    }
+
+    public int getClass_Num()
+    {
+        return m_label_count.getColumnDimension();
     }
 }
 
@@ -292,4 +307,14 @@ class EM_Model implements Prob_Model {
     private void Set_Model() {}
 
     public EM_Model Copy() {return  new EM_Model();}
+
+    public int getTask_Num()
+    {
+        return 0;
+    }
+
+    public int getClass_Num()
+    {
+        return 0;
+    }
 }
